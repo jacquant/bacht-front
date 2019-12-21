@@ -1,19 +1,42 @@
 <template>
-  <v-layout>
-    <v-flex class="text-center">
-      <img
-        src="/v.png"
-        alt="Vuetify.js"
-        class="mb-5"
-      >
-      <blockquote class="blockquote">
-        &#8220;First, solve the problem. Then, write the code.&#8221;
-        <footer>
-          <small>
-            <em>&mdash;John Johnson</em>
-          </small>
-        </footer>
-      </blockquote>
-    </v-flex>
-  </v-layout>
+  <kanban-board :stages="stages" :blocks="blocks"></kanban-board>
 </template>
+<style lang="scss">
+@import 'node_modules/vue-kanban/src/assets/kanban.scss';
+</style>
+<script>
+export default {
+  data() {
+    return {
+      stages: ['on-hold', 'in-progress', 'needs-review', 'approved'],
+      blocks: [
+        {
+          id: 1,
+          status: 'on-hold',
+          title: 'Welcome'
+        },
+        {
+          id: 2,
+          status: 'on-hold',
+          title: 'to'
+        },
+        {
+          id: 3,
+          status: 'in-progress',
+          title: 'the'
+        },
+        {
+          id: 4,
+          status: 'in-progress',
+          title: 'danger'
+        },
+        {
+          id: 5,
+          status: 'in-progress',
+          title: 'zone'
+        }
+      ]
+    }
+  }
+}
+</script>

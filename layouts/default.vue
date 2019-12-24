@@ -16,10 +16,22 @@
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
       <v-toolbar-title v-text="title" />
       <v-spacer />
+      <v-toolbar-title v-if="connected_ip !== '/'">
+        Connected to @{{connected_ip}}
+        <v-btn @click="logout" to="/" nuxt icon>
+          <v-icon dark>mdi-logout</v-icon>
+        </v-btn>
+      </v-toolbar-title>
+      <v-btn v-else to="/" nuxt>
+        Login page
+        <v-icon dark>mdi-login</v-icon>
+      </v-btn>
     </v-app-bar>
     <v-content>
       <v-container>
-        <nuxt />
+        <transition name="fade" mode="out-in">
+          <nuxt />
+        </transition>
       </v-container>
     </v-content>
     <v-footer :fixed="fixed" app>
@@ -50,6 +62,36 @@ export default {
       miniVariant: false,
       title: 'Project BachT 2019'
     }
+  },
+  computed: {
+    connected_ip() {
+      const index = this.$store.state.connected_board
+      if (index !== -1) {
+        return this.$store.state.list_boards[this.$store.state.connected_board]
+          .ip
+      } else {
+        return '/'
+      }
+    }
+  },
+  methods: {
+    logout() {
+      this.$store.dispatch('updateConnectedBoard', -1)
+    }
   }
 }
 </script>
+<style scoped>
+/* ********************************************************************** **
+    ** Define style for transition
+    ** ********************************************************************** */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 1s;
+}
+
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

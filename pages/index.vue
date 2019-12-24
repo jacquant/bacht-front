@@ -57,9 +57,13 @@
           <td class="text-center">{{item.ip}}</td>
           <td class="text-center">{{item.role}}</td>
           <td class="text-center">
-            <v-btn color="primary" nuxt>
+            <v-btn v-if="connected_board !==index" color="primary" @click="logIntoBoard(item)">
               Login
               <v-icon right dark>mdi-login-variant</v-icon>
+            </v-btn>
+            <v-btn v-else color="secondary" @click="logoutFromBoard(item)">
+              Logout
+              <v-icon right dark>mdi-logout-variant</v-icon>
             </v-btn>
           </td>
           <td class="text-center">
@@ -72,6 +76,7 @@
   </v-simple-table>
 </template>
 <script>
+import * as API from '../middleware/api'
 export default {
   data() {
     return {
@@ -80,26 +85,18 @@ export default {
       editedItem: {
         ip: '',
         role: ''
-      },
-      list_boards: [
-        {
-          ip: '127.0.0.1',
-          role: 'admin'
-        },
-        {
-          ip: '192.168.1.1',
-          role: 'manager'
-        },
-        {
-          ip: '192.168.1.240',
-          role: 'user'
-        }
-      ]
+      }
     }
   },
   computed: {
+    list_boards() {
+      return this.$store.state.list_boards
+    },
     formTitle() {
-      return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
+      return this.editedIndex === -1 ? 'New Board' : 'Edit Board'
+    },
+    connected_board() {
+      return this.$store.state.connected_board
     }
   },
   watch: {
@@ -116,8 +113,8 @@ export default {
 
     deleteItem(item) {
       const index = this.list_boards.indexOf(item)
-      confirm('Are you sure you want to delete this item?') &&
-        this.list_boards.splice(index, 1)
+      confirm('Are you sure you want to delete this board?') &&
+        this.$store.dispatch('remove', index)
     },
     close() {
       this.dialog = false
@@ -129,11 +126,24 @@ export default {
 
     save() {
       if (this.editedIndex > -1) {
-        Object.assign(this.list_boards[this.editedIndex], this.editedItem)
+        this.$store.dispatch('updateIpAndRole', {
+          item: this.editedItem,
+          index: this.editedIndex
+        })
       } else {
-        this.list_boards.push(this.editedItem)
+        this.$store.dispatch('add', this.editedItem)
       }
       this.close()
+    },
+
+    logIntoBoard(item) {
+      const index = this.list_boards.indexOf(item)
+      this.$store.dispatch('updateConnectedBoard', index)
+      this.$router.push('/board')
+    },
+
+    logoutFromBoard(item) {
+      this.$store.dispatch('updateConnectedBoard', -1)
     }
   }
 }

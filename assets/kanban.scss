@@ -1,4 +1,4 @@
-$ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
+$ease-out: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 
 ul.drag-list,
 ul.drag-inner-list {
@@ -55,7 +55,8 @@ ul.drag-inner-list {
 .drag-item {
   padding: 10px;
   margin: 10px;
-  height: 100px;
+  display: block;
+  overflow: auto;
   background: rgba(black, 0.4);
   transition: $ease-out;
 
@@ -63,7 +64,6 @@ ul.drag-inner-list {
     transform: scale(1.5);
     background: rgba(black, 0.8);
   }
-
 }
 
 .drag-header-more {

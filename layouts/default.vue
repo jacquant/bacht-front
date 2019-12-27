@@ -1,8 +1,20 @@
 <template>
   <v-app dark>
-    <v-navigation-drawer v-model="drawer" :mini-variant="miniVariant" :clipped="clipped" fixed app>
+    <v-navigation-drawer
+      v-model="drawer"
+      :mini-variant="miniVariant"
+      :clipped="clipped"
+      fixed
+      app
+    >
       <v-list>
-        <v-list-item v-for="(item, i) in items" :key="i" :to="item.to" router exact>
+        <v-list-item
+          v-for="(item, i) in items"
+          :key="i"
+          :to="item.to"
+          router
+          exact
+        >
           <v-list-item-action>
             <v-icon>{{ item.icon }}</v-icon>
           </v-list-item-action>
@@ -16,8 +28,8 @@
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
       <v-toolbar-title v-text="title" />
       <v-spacer />
-      <v-toolbar-title v-if="connected_ip !== '/'">
-        Connected to @{{connected_ip}}
+      <v-toolbar-title v-if="connected_ip">
+        Connected to {{ connected_name }} @{{ connected_ip }}
         <v-btn @click="logout" to="/" nuxt icon>
           <v-icon dark>mdi-logout</v-icon>
         </v-btn>
@@ -65,13 +77,10 @@ export default {
   },
   computed: {
     connected_ip() {
-      const index = this.$store.state.connected_board
-      if (index !== -1) {
-        return this.$store.state.list_boards[this.$store.state.connected_board]
-          .ip
-      } else {
-        return '/'
-      }
+      return this.$store.state.connected_board_ip
+    },
+    connected_name() {
+      return this.$store.state.connected_board_name
     }
   },
   methods: {

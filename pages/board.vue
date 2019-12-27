@@ -76,7 +76,12 @@
           </v-dialog>
         </h2>
       </div>
-      <div v-for="block in blocks" :slot="block.id" :key="block.id" v-ripple>
+      <div
+        v-for="(block, index) in blocks"
+        :slot="block.id"
+        :key="block.id"
+        v-ripple
+      >
         <div>
           <strong>{{ block.title }}</strong>
         </div>
@@ -110,7 +115,7 @@
                   @click="delete_dialog = !delete_dialog"
                   >Disagree</v-btn
                 >
-                <v-btn color="error" text @click="deleteItem(block.id)"
+                <v-btn color="error" text @click="deleteItem(index, block.id)"
                   >Agree</v-btn
                 >
               </v-card-actions>
@@ -259,12 +264,19 @@ export default {
       this.create_dialog = !this.create_dialog
     },
 
-    async deleteItem(index) {
-      this.$store.dispatch('removeCard', index)
+    async deleteItem(index, real_index) {
       await API.delete_connected_board(
         this.$store.state.list_boards,
         this.connected_board,
-        'card/' + index
+        'card/' + real_index
+      )
+      this.$store.dispatch(
+        'setCards',
+        await API.get_connected_board(
+          this.$store.state.list_boards,
+          this.connected_board,
+          'card/'
+        )
       )
       this.delete_dialog = !this.delete_dialog
     },

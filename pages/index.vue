@@ -104,7 +104,7 @@
             <template>
               <v-dialog v-model="delete_dialog" persistent max-width="290">
                 <template v-slot:activator="{ on }">
-                  <v-icon small v-on="on">mdi-delete</v-icon>
+                  <v-icon small class="mr-2" v-on="on">mdi-delete</v-icon>
                 </template>
                 <v-card>
                   <v-card-title class="headline">Delete a board!</v-card-title>
@@ -117,6 +117,7 @@
                 </v-card>
               </v-dialog>
             </template>
+            <v-icon small class="mr-2" @click="logIntoBoard(item)">mdi-login-variant</v-icon>
           </td>
         </tr>
       </tbody>

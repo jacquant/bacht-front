@@ -1,7 +1,7 @@
 <template>
   <client-only>
     <kanban-board
-      v-if="connected_board !== -1"
+      v-if="(connected_board !== -1) && renderComponent"
       :stages="stages"
       :blocks="blocks"
       :state-machine-config="stateMachineConfig"
@@ -10,20 +10,9 @@
       <div v-for="stage in stages" :slot="stage" :key="stage">
         <h2>
           {{ stage }}
-          <v-dialog
-            v-model="create_dialog"
-            fullscreen
-            :retain-focus="false"
-            persistent
-          >
+          <v-dialog v-model="create_dialog" fullscreen :retain-focus="false" persistent>
             <template v-slot:activator="{ on }">
-              <v-btn
-                style="float:right"
-                icon
-                small
-                v-on="on"
-                @click="editedItem.status = stage"
-              >
+              <v-btn style="float:right" icon small v-on="on" @click="editedItem.status = stage">
                 <v-icon>mdi-plus-circle</v-icon>
               </v-btn>
             </template>
@@ -38,11 +27,7 @@
                 <v-container>
                   <v-row>
                     <v-col cols="12" sm="6" md="4">
-                      <v-text-field
-                        v-model="editedItem.title"
-                        required
-                        label="Title Card"
-                      ></v-text-field>
+                      <v-text-field v-model="editedItem.title" required label="Title Card"></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="6" md="4">
                       <v-select
@@ -76,48 +61,38 @@
           </v-dialog>
         </h2>
       </div>
-      <div
-        v-for="(block, index) in blocks"
-        :slot="block.id"
-        :key="block.id"
-        v-ripple
-      >
+      <div v-for="(block, index) in blocks" :slot="block.id" :key="block.id" v-ripple>
         <div>
           <strong>{{ block.title }}</strong>
         </div>
         <div>
           <div v-html="block.content"></div>
-          <v-btn icon x-small dark style="float:right" @click="editItem(block)">
+          <v-btn
+            v-if="check_manager || check_admin"
+            icon
+            x-small
+            dark
+            style="float:right"
+            @click="editItem(block)"
+          >
             <v-icon>mdi-pencil</v-icon>
           </v-btn>
-          <v-dialog
-            v-model="delete_dialog"
-            persistent
-            max-width="290"
-            :retain-focus="false"
-          >
+          <v-dialog v-model="delete_dialog" persistent max-width="290" :retain-focus="false">
             <template v-slot:activator="{ on }">
-              <v-btn icon x-small dark style="float:right" v-on="on">
+              <v-btn v-if="check_admin" icon x-small dark style="float:right" v-on="on">
                 <v-icon>mdi-delete</v-icon>
               </v-btn>
             </template>
             <v-card>
               <v-card-title class="headline">Delete a card!</v-card-title>
-              <v-card-text
-                >Are you sure you want to delete this card? This action is
-                irreversible!</v-card-text
-              >
+              <v-card-text>
+                Are you sure you want to delete this card? This action is
+                irreversible!
+              </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn
-                  color="warning"
-                  text
-                  @click="delete_dialog = !delete_dialog"
-                  >Disagree</v-btn
-                >
-                <v-btn color="error" text @click="deleteItem(index, block.id)"
-                  >Agree</v-btn
-                >
+                <v-btn color="warning" text @click="delete_dialog = !delete_dialog">Disagree</v-btn>
+                <v-btn color="error" text @click="deleteItem(block, index, block.id)">Agree</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -151,12 +126,14 @@ import {
   HorizontalRule,
   History
 } from 'tiptap-vuetify'
+import { turquoise } from 'color-name'
 export default {
   components: {
     TiptapVuetify
   },
   data() {
     return {
+      renderComponent: true,
       create_dialog: false,
       delete_dialog: false,
       valid: true,
@@ -214,20 +191,41 @@ export default {
             type: 'final'
           }
         }
-      }
+      },
+      a: null
     }
   },
-  created: async function() {
-    if (this.connected_board !== -1) {
+  async mounted() {
+    if (this.$store.state.connected_board !== -1) {
       const query_cards = await API.get_connected_board(
         this.$store.state.list_boards,
-        this.connected_board,
+        this.$store.state.connected_board,
         'card'
       )
       this.$store.dispatch('setCards', query_cards)
     }
   },
+  created() {
+    this.updateBoard()
+  },
+  beforeDestroy() {
+    clearInterval(this.a)
+  },
   computed: {
+    check_admin() {
+      if (this.list_boards[this.connected_board].role == 'admin') {
+        return true
+      } else {
+        return false
+      }
+    },
+    check_manager() {
+      if (this.list_boards[this.connected_board].role == 'manager') {
+        return true
+      } else {
+        return false
+      }
+    },
     blocks() {
       return JSON.parse(JSON.stringify(this.$store.state.list_cards))
     },
@@ -236,9 +234,24 @@ export default {
     },
     formTitle() {
       return this.editedIndex === -1 ? 'New Card' : 'Edit Card'
+    },
+    list_boards() {
+      return this.$store.state.list_boards
     }
   },
   methods: {
+    updateBoard() {
+      this.a = setInterval(async () => {
+        if (this.$store.state.connected_board !== -1) {
+          const query_cards = await API.get_connected_board(
+            this.$store.state.list_boards,
+            this.$store.state.connected_board,
+            'card'
+          )
+          this.$store.dispatch('setCards', query_cards)
+        }
+      }, 60000)
+    },
     async updateBlock(id, status, new_index) {
       let concerned_block = this.blocks.find(b => b.id === id.toString())
       concerned_block.status = status
@@ -264,7 +277,7 @@ export default {
       this.create_dialog = !this.create_dialog
     },
 
-    async deleteItem(index, real_index) {
+    async deleteItem(block, index, real_index) {
       await API.delete_connected_board(
         this.$store.state.list_boards,
         this.connected_board,
